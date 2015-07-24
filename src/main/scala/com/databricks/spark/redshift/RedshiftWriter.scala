@@ -54,7 +54,7 @@ class RedshiftWriter(jdbcWrapper: JDBCWrapper) extends Logging {
    * Generate the COPY SQL command
    */
   def copySql(sqlContext: SQLContext, params: MergedParameters) = {
-    val creds = params.credentialsString(sqlContext.sparkContext.hadoopConfiguration)
+    val creds = params.credentialsString
     val fixedUrl = Utils.fixS3Url(params.tempPath)
     s"COPY ${params.table} FROM '$fixedUrl' CREDENTIALS '$creds' FORMAT AS AVRO 'auto' TIMEFORMAT 'epochmillisecs'"
   }
@@ -136,7 +136,7 @@ class RedshiftWriter(jdbcWrapper: JDBCWrapper) extends Logging {
     try {
       if(params.overwrite && params.useStagingTable) {
         withStagingTable(conn, params, table => {
-          val updatedParams = MergedParameters(params.parameters updated ("dbtable", table))
+          val updatedParams = params.updated("dbtable", table)
           unloadData(sqlContext, data, updatedParams.tempPath)
           doRedshiftLoad(conn, data, updatedParams)
         })

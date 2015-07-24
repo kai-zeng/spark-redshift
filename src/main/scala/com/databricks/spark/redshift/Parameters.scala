@@ -20,7 +20,6 @@ import java.net.URI
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import org.apache.hadoop.conf.Configuration
-
 import org.apache.spark.Logging
 
 /**
@@ -44,33 +43,60 @@ private [redshift] object Parameters extends Logging {
   /**
    * Merge user parameters with the defaults, preferring user parameters if specified
    */
-  def mergeParameters(userParameters: Map[String, String]) : MergedParameters = {
-    if(! userParameters.contains("tempdir")) {
+  def mergeParameters(userParameters: Map[String, String], hadoopConfiguration: Configuration) : MergedParameters = {
+    if (!userParameters.contains("tempdir")) {
       sys.error("'tempdir' is required for all Redshift loads and saves")
     }
-    if(! userParameters.contains("dbtable")) {
+    if (!userParameters.contains("dbtable")) {
       sys.error("You must specify a Redshift table name with 'dbtable' parameter")
     }
-    if(! userParameters.contains("url")) {
+    if (!userParameters.contains("url")) {
       sys.error("A JDBC URL must be provided with 'url' parameter")
     }
 
-    MergedParameters(DEFAULT_PARAMETERS ++ userParameters)
+    val scheme = new URI(userParameters("tempDir")).getScheme
+    val hadoopConfPrefix = s"fs.$scheme}"
+
+    val configuration = new Configuration(hadoopConfiguration)
+
+    if(userParameters.contains("aws_access_key_id")) {
+      log.info("Using credentials provided in parameter map.")
+      configuration.set("aws_access_key_id", userParameters("aws_access_key_id"))
+      configuration.set("aws_secret_access_key", userParameters("aws_secret_access_key"))
+      (userParameters("aws_access_key_id"), userParameters("aws_secret_access_key"))
+    } else if (hadoopConfiguration.get(s"$hadoopConfPrefix.awsAccessKeyId") != null) {
+      log.info(s"Using hadoopConfiguration credentials for scheme $scheme}")
+      (configuration.get(s"$hadoopConfPrefix.awsAccessKeyId"),
+        configuration.get(s"$hadoopConfPrefix.awsSecretAccessKey"))
+    } else {
+      try {
+        log.info(s"Using default provider chain for AWS credentials, as none provided explicitly.")
+        val awsCredentials = (new DefaultAWSCredentialsProviderChain).getCredentials
+        configuration.set("aws_access_key_id", awsCredentials.getAWSAccessKeyId)
+        configuration.set("aws_secret_access_key", awsCredentials.getAWSSecretKey)
+        (awsCredentials.getAWSAccessKeyId, awsCredentials.getAWSSecretKey)
+      } catch {
+        case e: Exception => throw new Exception("No credentials provided and unable to detect automatically.", e)
+      }
+    }
+
+    MergedParameters(DEFAULT_PARAMETERS ++ userParameters, configuration)
   }
 
   /**
    * Adds validators and accessors to string map
    */
-  case class MergedParameters(parameters: Map[String, String]) {
+  case class MergedParameters(parameters: Map[String, String], hadoopConfiguration: Configuration) {
+
+    def updated(key: String, value: String): MergedParameters =
+      new MergedParameters(parameters.updated(key, value), hadoopConfiguration)
 
     /**
      * A root directory to be used for intermediate data exchange, expected to be on S3, or somewhere
      * that can be written to and read from by Redshift. Make sure that AWS credentials are available
      * for S3.
      */
-    private def tempDir = {
-      parameters("tempdir")
-    }
+    private def tempDir = parameters("tempdir")
 
     /**
      * Each instance will create its own subdirectory in the tempDir, with a random UUID.
@@ -80,9 +106,7 @@ private [redshift] object Parameters extends Logging {
     /**
      * The Redshift table to be used as the target when loading or writing data.
      */
-    def table = {
-      parameters("dbtable")
-    }
+    def table = parameters("dbtable")
 
     /**
      * A JDBC URL, of the format, jdbc:subprotocol://host:port/database?user=username&password=password
@@ -95,9 +119,7 @@ private [redshift] object Parameters extends Logging {
      *  - database identifies a Redshift database name
      *  - user and password are credentials to access the database, which must be embedded in this URL for JDBC
      */
-    def jdbcUrl = {
-      parameters("url")
-    }
+    def jdbcUrl = parameters("url")
 
     /**
      * The JDBC driver class name. This is used to make sure the driver is registered before connecting over
@@ -169,30 +191,7 @@ private [redshift] object Parameters extends Logging {
      * scheme, and if that also fails, it finally tries AWS DefaultCredentialsProviderChain, which makes
      * use of standard system properties, environment variables, or IAM role configuration if available.
      */
-    def credentialsString(configuration: Configuration) = {
-
-      val scheme = new URI(tempDir).getScheme
-      val hadoopConfPrefix = s"fs.$scheme}"
-
-      val (accessKeyId, secretAccessKey) =
-        if(parameters.contains("aws_access_key_id")) {
-          log.info("Using credentials provided in parameter map.")
-          (parameters("aws_access_key_id"), parameters("aws_secret_access_key"))
-        } else if (configuration.get(s"$hadoopConfPrefix.awsAccessKeyId") != null) {
-          log.info(s"Using hadoopConfiguration credentials for scheme $scheme}")
-          (configuration.get(s"$hadoopConfPrefix.awsAccessKeyId"),
-            configuration.get(s"$hadoopConfPrefix.awsSecretAccessKey"))
-        } else {
-          try {
-            log.info(s"Using default provider chain for AWS credentials, as none provided explicitly.")
-            val awsCredentials = (new DefaultAWSCredentialsProviderChain).getCredentials
-            (awsCredentials.getAWSAccessKeyId, awsCredentials.getAWSSecretKey)
-          } catch {
-            case e: Exception => throw new Exception("No credentials provided and unable to detect automatically.", e)
-          }
-        }
-
-      s"aws_access_key_id=$accessKeyId;aws_secret_access_key=$secretAccessKey"
-    }
+    def credentialsString = s"aws_access_key_id=${parameters("aws_access_key_id")};" +
+      s"aws_secret_access_key=${parameters("aws_secret_access_key")}"
   }
 }
