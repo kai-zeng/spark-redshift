@@ -46,5 +46,4 @@ object Utils {
    * Creates a randomly named temp directory path for intermediate data
    */
   def makeTempPath(tempRoot: String) = Utils.joinUrls(tempRoot, UUID.randomUUID().toString)
-
 }

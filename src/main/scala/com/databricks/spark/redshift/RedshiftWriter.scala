@@ -19,13 +19,12 @@ package com.databricks.spark.redshift
 import java.sql.{Connection, SQLException}
 import java.util.Properties
 
-import scala.util.Random
-
 import com.databricks.spark.redshift.Parameters.MergedParameters
-
 import org.apache.spark.Logging
 import org.apache.spark.sql.jdbc.{DefaultJDBCWrapper, JDBCWrapper}
 import org.apache.spark.sql.{DataFrame, SQLContext}
+
+import scala.util.Random
 
 /**
  * Functions to write data to Redshift with intermediate Avro serialisation into S3.

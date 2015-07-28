@@ -16,6 +16,7 @@
 
 package com.databricks.spark.redshift
 
+import org.apache.hadoop.conf.Configuration
 import org.scalatest.{FunSuite, Matchers}
 
 /**
@@ -30,7 +31,7 @@ class ParametersSuite extends FunSuite with Matchers {
         "dbtable" -> "test_table",
         "url" -> "jdbc:postgresql://foo/bar")
 
-    val mergedParams = Parameters.mergeParameters(params)
+    val mergedParams = Parameters.mergeParameters(params, new Configuration())
 
     mergedParams.tempPath should startWith (params("tempdir"))
     mergedParams.jdbcUrl shouldBe params("url")
@@ -38,7 +39,7 @@ class ParametersSuite extends FunSuite with Matchers {
 
     // Check that the defaults have been added
     Parameters.DEFAULT_PARAMETERS foreach {
-      case (key, value) => mergedParams.parameters(key) shouldBe value
+      case (k, v) => mergedParams.parameters(k) shouldBe v
     }
   }
 
@@ -49,8 +50,8 @@ class ParametersSuite extends FunSuite with Matchers {
         "dbtable" -> "test_table",
         "url" -> "jdbc:postgresql://foo/bar")
 
-    val mergedParams1 = Parameters.mergeParameters(params)
-    val mergedParams2 = Parameters.mergeParameters(params)
+    val mergedParams1 = Parameters.mergeParameters(params, new Configuration())
+    val mergedParams2 = Parameters.mergeParameters(params, new Configuration())
 
     mergedParams1.tempPath should not equal mergedParams2.tempPath
   }
@@ -59,12 +60,32 @@ class ParametersSuite extends FunSuite with Matchers {
 
     def checkMerge(params: Map[String, String]): Unit = {
       intercept[Exception] {
-        Parameters.mergeParameters(params)
+        Parameters.mergeParameters(params, new Configuration())
       }
     }
 
     checkMerge(Map("dbtable" -> "test_table", "url" -> "jdbc:postgresql://foo/bar"))
     checkMerge(Map("tempdir" -> "s3://foo/bar", "url" -> "jdbc:postgresql://foo/bar"))
     checkMerge(Map("dbtable" -> "test_table", "tempdir" -> "s3://foo/bar"))
+  }
+
+  test("Options overwrite hadoop configuration") {
+    val params =
+      Map(
+        "tempdir" -> "s3://foo/bar",
+        "dbtable" -> "test_table",
+        "url" -> "jdbc:postgresql://foo/bar",
+        "aws_access_key_id" -> "keyId1",
+        "aws_secret_access_key" -> "secretKey1")
+
+    val hadoopConfiguration = new Configuration()
+    hadoopConfiguration.set("fs.s3.awsAccessKeyId", "keyId2")
+    hadoopConfiguration.set("fs.s3.awsSecretAccessKey", "secretKey2")
+
+    val mergedParams = Parameters.mergeParameters(params, hadoopConfiguration)
+
+    mergedParams.credentialsString shouldBe s"aws_access_key_id=keyId1;aws_secret_access_key=secretKey1"
+    mergedParams.hadoopConfiguration.get("fs.s3.awsAccessKeyId") shouldBe "keyId1"
+    mergedParams.hadoopConfiguration.get("fs.s3.awsSecretAccessKey") shouldBe "secretKey1"
   }
 }

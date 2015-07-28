@@ -55,32 +55,39 @@ private [redshift] object Parameters extends Logging {
     }
 
     val scheme = new URI(userParameters("tempDir")).getScheme
-    val hadoopConfPrefix = s"fs.$scheme}"
+    val hadoopConfPrefix = s"fs.$scheme"
 
+    val parameters = collection.mutable.Map() ++ DEFAULT_PARAMETERS ++ userParameters
     val configuration = new Configuration(hadoopConfiguration)
 
-    if(userParameters.contains("aws_access_key_id")) {
+    if(parameters.contains("aws_access_key_id")) {
       log.info("Using credentials provided in parameter map.")
-      configuration.set("aws_access_key_id", userParameters("aws_access_key_id"))
-      configuration.set("aws_secret_access_key", userParameters("aws_secret_access_key"))
-      (userParameters("aws_access_key_id"), userParameters("aws_secret_access_key"))
+      // Set hadoop configuration
+      configuration.set(s"$hadoopConfPrefix.awsAccessKeyId", userParameters("aws_access_key_id"))
+      configuration.set(s"$hadoopConfPrefix.awsSecretAccessKey", userParameters("aws_secret_access_key"))
     } else if (hadoopConfiguration.get(s"$hadoopConfPrefix.awsAccessKeyId") != null) {
       log.info(s"Using hadoopConfiguration credentials for scheme $scheme}")
-      (configuration.get(s"$hadoopConfPrefix.awsAccessKeyId"),
-        configuration.get(s"$hadoopConfPrefix.awsSecretAccessKey"))
+      // Set parameters
+      parameters("aws_access_key_id") = configuration.get(s"$hadoopConfPrefix.awsAccessKeyId")
+      parameters("aws_secret_access_key") = configuration.get(s"$hadoopConfPrefix.awsSecretAccessKey")
     } else {
       try {
         log.info(s"Using default provider chain for AWS credentials, as none provided explicitly.")
         val awsCredentials = (new DefaultAWSCredentialsProviderChain).getCredentials
-        configuration.set("aws_access_key_id", awsCredentials.getAWSAccessKeyId)
-        configuration.set("aws_secret_access_key", awsCredentials.getAWSSecretKey)
-        (awsCredentials.getAWSAccessKeyId, awsCredentials.getAWSSecretKey)
+        val keyId = awsCredentials.getAWSAccessKeyId
+        val secretKey = awsCredentials.getAWSSecretKey
+        // Set parameters
+        parameters("aws_access_key_id") = keyId
+        parameters("aws_access_key_id") = secretKey
+        // Set hadoop configuration
+        configuration.set(s"$hadoopConfPrefix.awsAccessKeyId", keyId)
+        configuration.set(s"$hadoopConfPrefix.awsSecretAccessKey", secretKey)
       } catch {
         case e: Exception => throw new Exception("No credentials provided and unable to detect automatically.", e)
       }
     }
 
-    MergedParameters(DEFAULT_PARAMETERS ++ userParameters, configuration)
+    MergedParameters(parameters.toMap, configuration)
   }
 
   /**

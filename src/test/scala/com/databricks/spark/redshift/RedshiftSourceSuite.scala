@@ -19,18 +19,17 @@ package com.databricks.spark.redshift
 import java.io.File
 import java.sql.{Connection, PreparedStatement, SQLException}
 
-import scala.util.matching.Regex
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapreduce.InputFormat
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
-
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.jdbc.JDBCWrapper
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.{Row, SQLContext, SaveMode}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+
+import scala.util.matching.Regex
 
 class TestContext extends SparkContext("local", "RedshiftSourceSuite") {
 
@@ -60,7 +59,7 @@ class RedshiftSourceSuite
    * Temporary folder for unloading data to
    */
   val tempDir = {
-    var dir = File.createTempFile("spark_redshift_tests", "")
+    val dir = File.createTempFile("spark_redshift_tests", "")
     dir.delete()
     dir.mkdirs()
     dir.toURI.toString
@@ -270,7 +269,7 @@ class RedshiftSourceSuite
       .returning("schema")
       .anyNumberOfTimes()
 
-    val relation = RedshiftRelation(jdbcWrapper, Parameters.mergeParameters(params), None)(testSqlContext)
+    val relation = RedshiftRelation(jdbcWrapper, Parameters.mergeParameters(params, new Configuration()), None)(testSqlContext)
     relation.asInstanceOf[InsertableRelation].insert(df, true)
 
     // Make sure we wrote the data out ready for Redshift load, in the expected formats
