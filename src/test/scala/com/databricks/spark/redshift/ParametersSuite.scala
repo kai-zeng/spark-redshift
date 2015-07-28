@@ -29,7 +29,9 @@ class ParametersSuite extends FunSuite with Matchers {
       Map(
         "tempdir" -> "s3://foo/bar",
         "dbtable" -> "test_table",
-        "url" -> "jdbc:postgresql://foo/bar")
+        "url" -> "jdbc:postgresql://foo/bar",
+        "aws_access_key_id" -> "keyId",
+        "aws_secret_access_key" -> "secretKey")
 
     val mergedParams = Parameters.mergeParameters(params, new Configuration())
 
@@ -49,7 +51,9 @@ class ParametersSuite extends FunSuite with Matchers {
       Map(
         "tempdir" -> "s3://foo/bar",
         "dbtable" -> "test_table",
-        "url" -> "jdbc:postgresql://foo/bar")
+        "url" -> "jdbc:postgresql://foo/bar",
+        "aws_access_key_id" -> "keyId",
+        "aws_secret_access_key" -> "secretKey")
 
     val mergedParams1 = Parameters.mergeParameters(params, new Configuration())
     val mergedParams2 = Parameters.mergeParameters(params, new Configuration())
