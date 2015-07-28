@@ -230,6 +230,38 @@ class RedshiftSourceSuite
     }
   }
 
+  test("DefaultSource using 'query' supports user schema, pruned and filtered scans") {
+
+    val params = Map("url" -> "jdbc:postgresql://foo/bar",
+      "tempdir" -> "tmp",
+      "query" -> "select * from test_table",
+      "aws_access_key_id" -> "test1",
+      "aws_secret_access_key" -> "test2")
+
+    val jdbcWrapper = prepareUnloadTest(params)
+    val testSqlContext = new SQLContext(sc)
+
+    // Construct the source with a custom schema
+    val source = new DefaultSource(jdbcWrapper)
+    val relation = source.createRelation(testSqlContext, params, TestUtils.testSchema)
+
+    // Define a simple filter to only include a subset of rows
+    val filters: Array[Filter] =
+      Array(EqualTo("testBool", true),
+        EqualTo("testString", "Unicode是樂趣"),
+        GreaterThan("testDouble", 1000.0),
+        LessThan("testDouble", Double.MaxValue),
+        GreaterThanOrEqual("testFloat", 1.0f),
+        LessThanOrEqual("testInt", 43))
+    val rdd = relation.asInstanceOf[PrunedFilteredScan].buildScan(Array("testByte", "testBool"), filters)
+
+    // We should now only have one matching row, with two columns
+    val filteredExpectedValues = Array(Row(1, true))
+    rdd.collect() zip filteredExpectedValues foreach {
+      case (loaded, expected) => loaded shouldBe expected
+    }
+  }
+
   test("DefaultSource serializes data as Avro, then sends Redshift COPY command") {
 
     val testSqlContext = new SQLContext(sc)

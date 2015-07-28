@@ -41,7 +41,7 @@ case class RedshiftRelation(jdbcWrapper: JDBCWrapper, params: MergedParameters, 
     case Some(schema) => schema
     case None =>
       jdbcWrapper.registerDriver(params.jdbcDriver)
-      jdbcWrapper.resolveTable(params.jdbcUrl, params.table, new Properties())
+      jdbcWrapper.resolveTable(params.jdbcUrl, params.tableOrQuery, new Properties())
   }
 
   override def buildScan(requiredColumns: Array[String], filters: Array[Filter]): RDD[Row] = {
@@ -67,7 +67,7 @@ case class RedshiftRelation(jdbcWrapper: JDBCWrapper, params: MergedParameters, 
 
   protected def unloadStmnt(columnList: String, whereClause: String) : String = {
     val credsString = params.credentialsString
-    val query = s"SELECT $columnList FROM ${params.table} $whereClause"
+    val query = s"SELECT $columnList FROM ${params.tableOrQuery} $whereClause"
     val fixedUrl = Utils.fixS3Url(params.tempPath)
 
     s"UNLOAD ('$query') TO '$fixedUrl' WITH CREDENTIALS '$credsString' ESCAPE ALLOWOVERWRITE"

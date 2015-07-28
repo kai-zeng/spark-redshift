@@ -36,6 +36,7 @@ class ParametersSuite extends FunSuite with Matchers {
     mergedParams.tempPath should startWith (params("tempdir"))
     mergedParams.jdbcUrl shouldBe params("url")
     mergedParams.table shouldBe params("dbtable")
+    mergedParams.tableOrQuery shouldBe params("dbtable")
 
     // Check that the defaults have been added
     Parameters.DEFAULT_PARAMETERS foreach {
