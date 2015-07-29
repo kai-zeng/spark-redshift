@@ -149,10 +149,8 @@ class RedshiftSourceSuite
   test("DefaultSource can load Redshift UNLOAD output to a DataFrame") {
 
     val params = Map("url" -> "jdbc:postgresql://foo/bar",
-      "tempdir" -> "tmp",
-      "dbtable" -> "test_table",
-      "aws_access_key_id" -> "test1",
-      "aws_secret_access_key" -> "test2")
+      "tempdir" -> "s3://test1:test2@tmp/",
+      "dbtable" -> "test_table")
 
     val jdbcWrapper = prepareUnloadTest(params)
     val testSqlContext = new SQLContext(sc)
@@ -171,10 +169,8 @@ class RedshiftSourceSuite
   test("DefaultSource supports simple column filtering") {
 
     val params = Map("url" -> "jdbc:postgresql://foo/bar",
-      "tempdir" -> "tmp",
-      "dbtable" -> "test_table",
-      "aws_access_key_id" -> "test1",
-      "aws_secret_access_key" -> "test2")
+      "tempdir" -> "s3://test1:test2@tmp/",
+      "dbtable" -> "test_table")
 
     val jdbcWrapper = prepareUnloadTest(params)
     val testSqlContext = new SQLContext(sc)
@@ -199,10 +195,8 @@ class RedshiftSourceSuite
   test("DefaultSource supports user schema, pruned and filtered scans") {
 
     val params = Map("url" -> "jdbc:postgresql://foo/bar",
-      "tempdir" -> "tmp",
-      "dbtable" -> "test_table",
-      "aws_access_key_id" -> "test1",
-      "aws_secret_access_key" -> "test2")
+      "tempdir" -> "s3://test1:test2@tmp/",
+      "dbtable" -> "test_table")
 
     val jdbcWrapper = prepareUnloadTest(params)
     val testSqlContext = new SQLContext(sc)
@@ -231,10 +225,8 @@ class RedshiftSourceSuite
   test("DefaultSource using 'query' supports user schema, pruned and filtered scans") {
 
     val params = Map("url" -> "jdbc:postgresql://foo/bar",
-      "tempdir" -> "tmp",
-      "query" -> "select * from test_table",
-      "aws_access_key_id" -> "test1",
-      "aws_secret_access_key" -> "test2")
+      "tempdir" -> "s3://test1:test2@tmp/",
+      "query" -> "select * from test_table")
 
     val jdbcWrapper = prepareUnloadTest(params)
     val testSqlContext = new SQLContext(sc)
