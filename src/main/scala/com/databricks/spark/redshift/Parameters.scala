@@ -102,8 +102,9 @@ private[redshift] object Parameters extends Logging {
           sys.error("No credentials provided.")
         }
 
-      s"'${Utils.fixS3Url(s"${uri.getScheme}://${uri.getHost}${uri.getPath}")}'" +
-        s" CREDENTIALS 'aws_access_key_id=$accessKeyId;aws_secret_access_key=$secretAccessKey'"
+      val noCredentials = Utils.fixS3Url(new URI(uri.getScheme, uri.getHost, uri.getPath, uri.getFragment).toString)
+
+      s"'$noCredentials' CREDENTIALS 'aws_access_key_id=$accessKeyId;aws_secret_access_key=$secretAccessKey'"
     }
 
     /**
