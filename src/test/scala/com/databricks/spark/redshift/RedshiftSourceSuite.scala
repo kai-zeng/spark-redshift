@@ -17,6 +17,7 @@
 package com.databricks.spark.redshift
 
 import java.io.File
+import java.net.URI
 import java.sql.{Connection, PreparedStatement, SQLException}
 
 import org.apache.hadoop.conf.Configuration
@@ -56,11 +57,12 @@ class RedshiftSourceSuite
   /**
    * Temporary folder for unloading data to
    */
-  val tempDir = {
+  val tempDir: String = {
     val dir = File.createTempFile("spark_redshift_tests", "")
     dir.delete()
     dir.mkdirs()
-    dir.toURI.toString
+    val uri: URI = dir.toURI
+    new URI(uri.getScheme, "test1:test2", uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment).toString
   }
 
   /**
