@@ -87,10 +87,10 @@ private[redshift] object Parameters extends Logging {
 
       val userInfo = uri.getUserInfo
       val (accessKeyId, secretAccessKey) =
-        if (userInfo.nonEmpty) {
+        if (userInfo != null) {
           log.info("Using credentials provided in parameter map.")
-          val segs = userInfo.split(":").map(_.trim) match {
-            case Array(keyId, secretKey) if keyId.nonEmpty && secretKey.nonEmpty => (keyId, secretKey)
+          val segs = userInfo.split(":").map(_.trim).toSeq match {
+            case Seq(keyId, secretKey) if keyId.nonEmpty && secretKey.nonEmpty => (keyId, secretKey)
             case _ => sys.error(s"Corrupted aws credential $userInfo")
           }
         } else if (configuration.get(s"$hadoopConfPrefix.awsAccessKeyId") != null &&
