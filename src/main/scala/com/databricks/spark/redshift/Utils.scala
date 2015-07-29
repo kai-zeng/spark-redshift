@@ -35,12 +35,6 @@ object Utils {
   }
 
   /**
-   * Redshift COPY and UNLOAD commands don't support s3n or s3a, but users may wish to use them
-   * for data loads. This function converts the URL back to the s3:// format.
-   */
-  def fixS3Url(url: String): String = url.replaceAll("s3[an]://", "s3://")
-
-  /**
    * Creates a randomly named temp directory path for intermediate data
    */
   def makeTempPath(tempRoot: String): String = Utils.joinUrls(tempRoot, UUID.randomUUID().toString)
