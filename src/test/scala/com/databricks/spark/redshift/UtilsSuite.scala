@@ -26,7 +26,7 @@ class UtilsSuite extends FunSuite with Matchers {
   test("joinUrls preserves protocol information") {
     Utils.joinUrls("s3n://foo/bar/", "/baz") shouldBe "s3n://foo/bar/baz/"
   }
-  
+
   test("temp paths are random subdirectories of root") {
     val root = "s3n://temp/"
     val firstTempPath = Utils.makeTempPath(root)

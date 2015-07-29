@@ -24,7 +24,7 @@ import org.scalatest.{FunSuite, Matchers}
  */
 class ParametersSuite extends FunSuite with Matchers {
 
-  test("Minimal valid parameter map is accepted") {
+  test("minimal valid parameter map is accepted") {
     val params =
       Map(
         "tempdir" -> "s3://foo/bar",
@@ -44,7 +44,7 @@ class ParametersSuite extends FunSuite with Matchers {
     }
   }
 
-  test("New instances have distinct temp paths") {
+  test("new instances have distinct temp paths") {
     val params =
       Map(
         "tempdir" -> "s3://foo/bar",
@@ -57,7 +57,7 @@ class ParametersSuite extends FunSuite with Matchers {
     mergedParams1.tempPath should not equal mergedParams2.tempPath
   }
 
-  test("Errors are thrown when mandatory parameters are not provided") {
+  test("errors are thrown when mandatory parameters are not provided") {
 
     def checkMerge(params: Map[String, String]): Unit = {
       intercept[Exception] {
@@ -83,7 +83,7 @@ class ParametersSuite extends FunSuite with Matchers {
 
     val mergedParams = Parameters.mergeParameters(params)
 
-    mergedParams.tempPathForRedshift(hadoopConfiguration) shouldBe
-      s"'s3://foo/bar' CREDENTIALS 'aws_access_key_id=keyId1;aws_secret_access_key=secretKey1'"
+    mergedParams.tempPathForRedshift(hadoopConfiguration) should fullyMatch
+      "'s3://foo/bar/[0-9a-f\\-]+/' CREDENTIALS 'aws_access_key_id=keyId1;aws_secret_access_key=secretKey1'"
   }
 }

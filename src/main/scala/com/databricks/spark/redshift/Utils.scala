@@ -29,9 +29,9 @@ object Utils {
    * a temp directory path for S3.
    */
   def joinUrls(a: String, b: String): String = {
-    val aUri = new URI(a)
-    val joinedPath = new File(aUri.getPath, b).toString
-    new URI(aUri.getScheme, aUri.getHost, joinedPath, null).toString + "/"
+    val uri = new URI(a)
+    val joinedPath = new File(uri.getPath, b).toString
+    s"${new URI(uri.getScheme, uri.getUserInfo, uri.getHost, uri.getPort, joinedPath, uri.getQuery, uri.getFragment)}/"
   }
 
   /**
