@@ -60,7 +60,7 @@ package object redshift {
      * to control Redshift and resolve the schema
      */
     def redshiftTable(parameters: Map[String, String]) = {
-      val params = Parameters.mergeParameters(parameters, sqlContext.sparkContext.hadoopConfiguration)
+      val params = Parameters.mergeParameters(parameters)
       sqlContext.baseRelationToDataFrame(RedshiftRelation(DefaultJDBCWrapper, params, None)(sqlContext))
     }
   }
@@ -74,7 +74,7 @@ package object redshift {
      * Load the DataFrame into a Redshift database table
      */
     def saveAsRedshiftTable(parameters: Map[String, String]): Unit = {
-      val params = Parameters.mergeParameters(parameters, dataFrame.sqlContext.sparkContext.hadoopConfiguration)
+      val params = Parameters.mergeParameters(parameters)
       DefaultRedshiftWriter.saveToRedshift(dataFrame.sqlContext, dataFrame, params)
     }
   }

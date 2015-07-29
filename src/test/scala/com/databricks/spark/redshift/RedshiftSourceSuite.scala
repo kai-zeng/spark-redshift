@@ -38,12 +38,10 @@ class TestContext extends SparkContext("local", "RedshiftSourceSuite") {
    */
   val testData = new File("src/test/resources/redshift_unload_data.txt").toURI.toString
 
-  override def newAPIHadoopFile[K, V, F <: InputFormat[K, V]]
-  (path: String, fClass: Class[F], kClass: Class[K],
-   vClass: Class[V], conf: Configuration = hadoopConfiguration):
-  RDD[(K, V)] = {
+  override def newAPIHadoopFile[K, V, F <: InputFormat[K, V]](
+    path: String, fClass: Class[F], kClass: Class[K], vClass: Class[V],
+    conf: Configuration = hadoopConfiguration): RDD[(K, V)] =
     super.newAPIHadoopFile[K, V, F](testData, fClass, kClass, vClass, conf)
-  }
 }
 
 /**
@@ -164,7 +162,7 @@ class RedshiftSourceSuite
     val relation = source.createRelation(testSqlContext, params)
     val df = testSqlContext.baseRelationToDataFrame(relation)
 
-    df.rdd.collect() zip expectedData foreach {
+    df.collect() zip expectedData foreach {
       case (loaded, expected) =>
         loaded shouldBe expected
     }
@@ -301,8 +299,8 @@ class RedshiftSourceSuite
       .returning("schema")
       .anyNumberOfTimes()
 
-    val relation = RedshiftRelation(jdbcWrapper, Parameters.mergeParameters(params, new Configuration()), None)(testSqlContext)
-    relation.asInstanceOf[InsertableRelation].insert(df, true)
+    val relation = RedshiftRelation(jdbcWrapper, Parameters.mergeParameters(params), None)(testSqlContext)
+    relation.asInstanceOf[InsertableRelation].insert(df, overwrite = true)
 
     // Make sure we wrote the data out ready for Redshift load, in the expected formats
     val written = testSqlContext.read.format("com.databricks.spark.avro").load(tempDir)
@@ -512,6 +510,4 @@ class RedshiftSourceSuite
   test("DefaultSource has default constructor, required by Data Source API") {
     new DefaultSource()
   }
-
-
 }

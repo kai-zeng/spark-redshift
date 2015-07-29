@@ -43,7 +43,7 @@ class DefaultSource(jdbcWrapper: JDBCWrapper)
    * JDBC connection over provided URL, which must contain credentials.
    */
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String]): BaseRelation = {
-    val params = Parameters.mergeParameters(parameters, sqlContext.sparkContext.hadoopConfiguration)
+    val params = Parameters.mergeParameters(parameters)
     RedshiftRelation(jdbcWrapper, params, None)(sqlContext)
   }
 
@@ -52,7 +52,7 @@ class DefaultSource(jdbcWrapper: JDBCWrapper)
    */
   override def createRelation(sqlContext: SQLContext, parameters: Map[String, String],
       schema: StructType): BaseRelation = {
-    val params = Parameters.mergeParameters(parameters, sqlContext.sparkContext.hadoopConfiguration)
+    val params = Parameters.mergeParameters(parameters)
     RedshiftRelation(jdbcWrapper, params, Some(schema))(sqlContext)
   }
 
@@ -61,7 +61,7 @@ class DefaultSource(jdbcWrapper: JDBCWrapper)
    */
   override def createRelation(sqlContext: SQLContext, mode: SaveMode, parameters: Map[String, String],
     data: DataFrame): BaseRelation = {
-    val params = Parameters.mergeParameters(parameters, sqlContext.sparkContext.hadoopConfiguration)
+    val params = Parameters.mergeParameters(parameters)
 
     def tableExists: Boolean = {
       val conn = jdbcWrapper.getConnector(params.jdbcDriver, params.jdbcUrl, new Properties()).apply()

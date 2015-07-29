@@ -66,17 +66,16 @@ case class RedshiftRelation(jdbcWrapper: JDBCWrapper, params: MergedParameters, 
   }
 
   protected def unloadStmnt(columnList: String, whereClause: String) : String = {
-    val credsString = params.credentialsString
+    val unloadTo = params.tempPathForRedshift(sqlContext.sparkContext.hadoopConfiguration)
     val query = s"SELECT $columnList FROM ${params.tableOrQuery} $whereClause"
-    val fixedUrl = Utils.fixS3Url(params.tempPath)
 
-    s"UNLOAD ('$query') TO '$fixedUrl' WITH CREDENTIALS '$credsString' ESCAPE ALLOWOVERWRITE"
+    s"UNLOAD ('$query') TO '$unloadTo' ESCAPE ALLOWOVERWRITE"
   }
 
   protected def makeRdd(schema: StructType): RDD[Row] = {
     val sc = sqlContext.sparkContext
     val rdd = sc.newAPIHadoopFile(params.tempPath, classOf[RedshiftInputFormat],
-      classOf[java.lang.Long], classOf[Array[String]], params.hadoopConfiguration)
+      classOf[java.lang.Long], classOf[Array[String]], sc.hadoopConfiguration)
     rdd.values.map(Conversions.rowConverter(schema))
   }
 

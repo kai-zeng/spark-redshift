@@ -25,8 +25,6 @@ credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-libraryDependencies += "com.amazonaws" % "aws-java-sdk-core" % "1.9.40" % "provided"
-
 // We require spark-avro, but avro-mapred must be provided to match Hadoop version
 libraryDependencies += "com.databricks" %% "spark-avro" % "1.0.0"
 

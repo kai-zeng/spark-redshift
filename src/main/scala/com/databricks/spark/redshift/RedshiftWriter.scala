@@ -53,9 +53,8 @@ class RedshiftWriter(jdbcWrapper: JDBCWrapper) extends Logging {
    * Generate the COPY SQL command
    */
   def copySql(sqlContext: SQLContext, params: MergedParameters) = {
-    val creds = params.credentialsString
-    val fixedUrl = Utils.fixS3Url(params.tempPath)
-    s"COPY ${params.table} FROM '$fixedUrl' CREDENTIALS '$creds' FORMAT AS AVRO 'auto' TIMEFORMAT 'epochmillisecs'"
+    val copyFrom = params.tempPathForRedshift(sqlContext.sparkContext.hadoopConfiguration)
+    s"COPY ${params.table} FROM $copyFrom FORMAT AS AVRO 'auto' TIMEFORMAT 'epochmillisecs'"
   }
 
   /**

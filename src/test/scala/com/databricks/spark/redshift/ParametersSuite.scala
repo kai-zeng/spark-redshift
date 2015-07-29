@@ -29,13 +29,11 @@ class ParametersSuite extends FunSuite with Matchers {
       Map(
         "tempdir" -> "s3://foo/bar",
         "dbtable" -> "test_table",
-        "url" -> "jdbc:postgresql://foo/bar",
-        "aws_access_key_id" -> "keyId",
-        "aws_secret_access_key" -> "secretKey")
+        "url" -> "jdbc:postgresql://foo/bar")
 
-    val mergedParams = Parameters.mergeParameters(params, new Configuration())
+    val mergedParams = Parameters.mergeParameters(params)
 
-    mergedParams.tempPath should startWith (params("tempdir"))
+    mergedParams.tempPath should startWith(params("tempdir"))
     mergedParams.jdbcUrl shouldBe params("url")
     mergedParams.table shouldBe params("dbtable")
     mergedParams.tableOrQuery shouldBe params("dbtable")
@@ -51,12 +49,10 @@ class ParametersSuite extends FunSuite with Matchers {
       Map(
         "tempdir" -> "s3://foo/bar",
         "dbtable" -> "test_table",
-        "url" -> "jdbc:postgresql://foo/bar",
-        "aws_access_key_id" -> "keyId",
-        "aws_secret_access_key" -> "secretKey")
+        "url" -> "jdbc:postgresql://foo/bar")
 
-    val mergedParams1 = Parameters.mergeParameters(params, new Configuration())
-    val mergedParams2 = Parameters.mergeParameters(params, new Configuration())
+    val mergedParams1 = Parameters.mergeParameters(params)
+    val mergedParams2 = Parameters.mergeParameters(params)
 
     mergedParams1.tempPath should not equal mergedParams2.tempPath
   }
@@ -65,7 +61,7 @@ class ParametersSuite extends FunSuite with Matchers {
 
     def checkMerge(params: Map[String, String]): Unit = {
       intercept[Exception] {
-        Parameters.mergeParameters(params, new Configuration())
+        Parameters.mergeParameters(params)
       }
     }
 
@@ -74,23 +70,20 @@ class ParametersSuite extends FunSuite with Matchers {
     checkMerge(Map("dbtable" -> "test_table", "tempdir" -> "s3://foo/bar"))
   }
 
-  test("Options overwrite hadoop configuration") {
+  test("credentials coded in tempdir overwrite hadoop configuration") {
     val params =
       Map(
-        "tempdir" -> "s3://foo/bar",
+        "tempdir" -> "s3://keyId1:secretKey1@foo/bar",
         "dbtable" -> "test_table",
-        "url" -> "jdbc:postgresql://foo/bar",
-        "aws_access_key_id" -> "keyId1",
-        "aws_secret_access_key" -> "secretKey1")
+        "url" -> "jdbc:postgresql://foo/bar")
 
     val hadoopConfiguration = new Configuration()
     hadoopConfiguration.set("fs.s3.awsAccessKeyId", "keyId2")
     hadoopConfiguration.set("fs.s3.awsSecretAccessKey", "secretKey2")
 
-    val mergedParams = Parameters.mergeParameters(params, hadoopConfiguration)
+    val mergedParams = Parameters.mergeParameters(params)
 
-    mergedParams.credentialsString shouldBe s"aws_access_key_id=keyId1;aws_secret_access_key=secretKey1"
-    mergedParams.hadoopConfiguration.get("fs.s3.awsAccessKeyId") shouldBe "keyId1"
-    mergedParams.hadoopConfiguration.get("fs.s3.awsSecretAccessKey") shouldBe "secretKey1"
+    mergedParams.tempPathForRedshift(hadoopConfiguration) shouldBe
+      s"'s3://foo/bar' CREDENTIALS 'aws_access_key_id=keyId1;aws_secret_access_key=secretKey1'"
   }
 }
