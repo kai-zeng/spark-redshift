@@ -61,11 +61,6 @@ class RedshiftSourceSuite
   with BeforeAndAfterAll {
 
   /**
-   * JDBC Url
-   */
-  val jdbcUrl = "jdbc:postgresql://foo/bar"
-
-  /**
    * Temporary folder for unloading data to
    */
   val tempDir: String = {
@@ -160,7 +155,7 @@ class RedshiftSourceSuite
 
   test("DefaultSource can load Redshift UNLOAD output to a DataFrame") {
     val params = Map(
-      "url" -> jdbcUrl,
+      "url" -> "jdbc:postgresql://foo/bar",
       "tempdir" -> tempDir,
       "dbtable" -> "test_table"
     )
@@ -181,7 +176,7 @@ class RedshiftSourceSuite
 
   test("DefaultSource supports simple column filtering") {
     val params = Map(
-      "url" -> jdbcUrl,
+      "url" -> "jdbc:postgresql://foo/bar",
       "tempdir" -> tempDir,
       "dbtable" -> "test_table"
     )
@@ -208,7 +203,7 @@ class RedshiftSourceSuite
 
   test("DefaultSource supports user schema, pruned and filtered scans") {
     val params = Map(
-      "url" -> jdbcUrl,
+      "url" -> "jdbc:postgresql://foo/bar",
       "tempdir" -> tempDir,
       "dbtable" -> "test_table"
     )
@@ -240,7 +235,7 @@ class RedshiftSourceSuite
   test("DefaultSource using 'query' supports user schema, pruned and filtered scans") {
 
     val params = Map(
-      "url" -> jdbcUrl,
+      "url" -> "jdbc:postgresql://foo/bar",
       "tempdir" -> tempDir,
       "query" -> "select * from test_table"
     )
@@ -272,6 +267,7 @@ class RedshiftSourceSuite
   test("DefaultSource serializes data as Avro, then sends Redshift COPY command") {
     val testSqlContext = new SQLContext(sc)
 
+    val jdbcUrl = "jdbc:postgresql://foo/bar"
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
@@ -319,6 +315,7 @@ class RedshiftSourceSuite
   test("Failed copies are handled gracefully when using a staging table") {
     val testSqlContext = new SQLContext(sc)
 
+    val jdbcUrl = "jdbc:postgresql://foo/bar"
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
@@ -401,6 +398,7 @@ class RedshiftSourceSuite
   test("Append SaveMode doesn't destroy existing data") {
     val testSqlContext = new SQLContext(sc)
 
+    val jdbcUrl = "jdbc:postgresql://foo/bar"
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
@@ -441,6 +439,7 @@ class RedshiftSourceSuite
   test("Respect SaveMode.ErrorIfExists when table exists") {
     val testSqlContext = new SQLContext(sc)
 
+    val jdbcUrl = "jdbc:postgresql://foo/bar"
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
@@ -467,6 +466,7 @@ class RedshiftSourceSuite
   test("Do nothing when table exists if SaveMode = Ignore") {
     val testSqlContext = new SQLContext(sc)
 
+    val jdbcUrl = "jdbc:postgresql://foo/bar"
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
