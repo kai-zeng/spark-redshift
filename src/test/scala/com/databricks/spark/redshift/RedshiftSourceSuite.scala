@@ -35,10 +35,8 @@ class TestContext extends SparkContext("local", "RedshiftSourceSuite") {
 
   override val hadoopConfiguration: Configuration = {
     val conf = new Configuration(super.hadoopConfiguration)
-
     conf.set("fs.file.awsAccessKeyId", "awsAccessKeyId")
     conf.set("fs.file.awsSecretAccessKey", "awsSecretAccessKey")
-
     conf
   }
 
@@ -161,7 +159,6 @@ class RedshiftSourceSuite
   }
 
   test("DefaultSource can load Redshift UNLOAD output to a DataFrame") {
-
     val params = Map(
       "url" -> jdbcUrl,
       "tempdir" -> tempDir,
