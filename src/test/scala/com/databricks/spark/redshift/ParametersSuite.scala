@@ -86,4 +86,17 @@ class ParametersSuite extends FunSuite with Matchers {
     mergedParams.tempPathForRedshift(hadoopConfiguration) should fullyMatch
       "'s3://foo/bar/[0-9a-f\\-]+/' CREDENTIALS 'aws_access_key_id=keyId1;aws_secret_access_key=secretKey1'"
   }
+
+  test("invalid options with both dbtable and query specified") {
+    val params =
+      Map(
+        "tempdir" -> "s3://keyId1:secretKey1@foo/bar",
+        "dbtable" -> "test_table",
+        "query" -> "select * from test_table",
+        "url" -> "jdbc:postgresql://foo/bar")
+
+    intercept[Exception] {
+      Parameters.mergeParameters(params)
+    }
+  }
 }
